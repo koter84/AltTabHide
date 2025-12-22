@@ -1,0 +1,15 @@
+{
+  "name": "Alt-Tab Hide",
+  "description": "Hide specific applications from the Alt-Tab window switcher",
+  "uuid": "alttabhide@koter84.github.com",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49"
+  ],
+  "version": 0,
+  "url": "https://github.com/koter84/AltTabHide",
+  "settings-schema": "org.gnome.shell.extensions.alttabhide"
+}
