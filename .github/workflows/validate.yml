@@ -1,0 +1,42 @@
+name: Validate GNOME Extension
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Locate extension directory
+        id: extdir
+        run: |
+          DIR=$(find . -maxdepth 2 -name metadata.json -printf '%h\n' | head -n1)
+          if [ -z "$DIR" ]; then
+            echo "metadata.json not found"
+            exit 1
+          fi
+          echo "dir=$DIR" >> $GITHUB_OUTPUT
+
+      - name: Install gnome-extensions tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnome-shell-common
+
+      - name: Build extension zip
+        run: |
+          DIR="${{ steps.extdir.outputs.dir }}"
+          UUID=$(jq -r '.uuid' "$DIR/metadata.json")
+          cd "$DIR"
+          zip -r "../$UUID.zip" . \
+            -x "*.git*" \
+            -x "*.github*" \
+            -x "*.zip"
+
+      - name: Validate extension
+        run: |
+          gnome-extensions validate *.zip
