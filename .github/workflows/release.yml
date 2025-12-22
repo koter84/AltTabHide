@@ -54,8 +54,9 @@ jobs:
         run: |
           DIR="${{ steps.extdir.outputs.dir }}"
           UUID=$(jq -r '.uuid' "$DIR/metadata.json")
+          VERSION=$(jq -r '.version' "$DIR/metadata.json")
           cd "$DIR"
-          zip -r "../$UUID.zip" . \
+          zip -r "../${UUID}_v${VERSION}.zip" . \
             -x "*.git*" \
             -x "*.github*" \
             -x "*.zip"
