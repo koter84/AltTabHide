@@ -1,6 +1,6 @@
 /**
  * Alt-Tab Hide Extension Preferences for GNOME Shell 49
- * 
+ *
  * Settings UI to select which applications to hide from Alt-Tab
  */
 
@@ -17,7 +17,7 @@ import {
 export default class AltTabHidePreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
-        
+
         // Create a preferences page
         const page = new Adw.PreferencesPage({
             title: _('Alt-Tab Hide Settings'),
@@ -38,11 +38,11 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
             title: _('Hidden Applications'),
             description: _('Select applications to hide from the Alt-Tab window switcher'),
         });
-        
+
         this._settings = settings;
         this._checkboxes = new Map();
         this._hiddenAppRows = [];
-        
+
         this._buildUI();
     }
 
@@ -66,7 +66,7 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
         const searchRow = new Adw.ActionRow({
             title: _('Search Applications'),
         });
-        
+
         const searchEntry = new Gtk.SearchEntry({
             placeholder_text: _('Type to filter...'),
             valign: Gtk.Align.CENTER,
@@ -79,7 +79,7 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
 
         // Get all installed applications
         this._loadInstalledApps(hiddenApps);
-        
+
         // Listen for settings changes
         this._settings.connect('changed::hidden-apps', () => {
             this._updateHiddenAppsList();
@@ -89,10 +89,10 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
     _loadInstalledApps(hiddenApps) {
         // Get all installed applications using Gio.AppInfo (works in prefs context)
         const apps = Gio.AppInfo.get_all();
-        
+
         // Filter to only show apps that should be visible
         const visibleApps = apps.filter(app => app.should_show());
-        
+
         // Sort apps by name
         visibleApps.sort((a, b) => {
             const nameA = a.get_display_name() || '';
@@ -105,41 +105,41 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
         for (const app of visibleApps) {
             const appId = app.get_id();
             const appName = app.get_display_name();
-            
+
             if (!appName || !appId) continue;
 
             const row = new Adw.ActionRow({
                 title: appName,
                 subtitle: appId,
             });
-            
+
             // Create checkbox
             const checkbox = new Gtk.CheckButton({
                 valign: Gtk.Align.CENTER,
             });
             checkbox.set_active(hiddenApps.includes(appId));
-            
+
             checkbox.connect('toggled', () => {
                 this._onAppToggled(appId, checkbox.get_active());
             });
-            
+
             this._checkboxes.set(appId, checkbox);
             row.add_prefix(checkbox);
             row.set_activatable_widget(checkbox);
-            
+
             // Store row for filtering
             row._appName = appName.toLowerCase();
             row._appId = appId.toLowerCase();
             this._appRows.push(row);
-            
+
             this._availableAppsGroup.add(row);
         }
     }
 
     _filterApps(searchText) {
         for (const row of this._appRows) {
-            const visible = !searchText || 
-                row._appName.includes(searchText) || 
+            const visible = !searchText ||
+                row._appName.includes(searchText) ||
                 row._appId.includes(searchText);
             row.visible = visible;
         }
@@ -147,15 +147,13 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
 
     _onAppToggled(appId, isActive) {
         let hiddenApps = this._settings.get_strv('hidden-apps');
-        
+
         if (isActive && !hiddenApps.includes(appId)) {
             hiddenApps.push(appId);
-            console.log(`[AltTabHide Prefs] Added app to hidden list: ${appId}`);
         } else if (!isActive && hiddenApps.includes(appId)) {
             hiddenApps = hiddenApps.filter(id => id !== appId);
-            console.log(`[AltTabHide Prefs] Removed app from hidden list: ${appId}`);
         }
-        
+
         this._settings.set_strv('hidden-apps', hiddenApps);
     }
 
@@ -168,7 +166,7 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
 
         // Get current hidden apps
         const hiddenApps = this._settings.get_strv('hidden-apps');
-        
+
         if (hiddenApps.length === 0) {
             const emptyRow = new Adw.ActionRow({
                 title: _('No hidden apps'),
@@ -184,12 +182,12 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
             // Try to get app info using GioUnix.DesktopAppInfo
             const app = GioUnix.DesktopAppInfo.new(appId);
             const appName = app ? app.get_display_name() : appId;
-            
+
             const row = new Adw.ActionRow({
                 title: appName,
                 subtitle: appId,
             });
-            
+
             // Add remove button
             const removeButton = new Gtk.Button({
                 icon_name: 'list-remove-symbolic',
@@ -199,7 +197,7 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
             removeButton.connect('clicked', () => {
                 this._removeHiddenApp(appId);
             });
-            
+
             row.add_suffix(removeButton);
             this._hiddenAppRows.push(row);
             this.add(row);
@@ -210,8 +208,7 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
         let hiddenApps = this._settings.get_strv('hidden-apps');
         hiddenApps = hiddenApps.filter(id => id !== appId);
         this._settings.set_strv('hidden-apps', hiddenApps);
-        console.log(`[AltTabHide Prefs] Removed app from hidden list: ${appId}`);
-        
+
         // Update checkbox if it exists
         const checkbox = this._checkboxes.get(appId);
         if (checkbox) {
