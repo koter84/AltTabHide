@@ -4,11 +4,11 @@
         
         <!-- List of application IDs to hide from Alt-Tab -->
         <key name="hidden-apps" type="as">
-            <default>['com.gexperts.Tilix.desktop']</default>
+            <default>[]</default>
             <summary>Hidden Applications</summary>
             <description>
                 List of application IDs that should be hidden from the Alt-Tab window switcher.
-                Each entry should be the full desktop file name (e.g., 'com.gexperts.Tilix.desktop').
+                Each entry should be the full desktop file name.
             </description>
         </key>
         
