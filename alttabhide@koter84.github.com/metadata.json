@@ -9,7 +9,7 @@
     "48",
     "49"
   ],
-  "version": 3,
+  "version": 4,
   "url": "https://github.com/koter84/AltTabHide",
   "settings-schema": "org.gnome.shell.extensions.alttabhide"
 }

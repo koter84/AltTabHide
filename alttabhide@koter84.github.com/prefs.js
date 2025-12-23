@@ -42,8 +42,25 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
         this._settings = settings;
         this._checkboxes = new Map();
         this._hiddenAppRows = [];
+        this._connectionIds = [];
 
         this._buildUI();
+    }
+
+    _connectAndStore(object, signal, callback) {
+        const id = object.connect(signal, callback);
+        this._connectionIds.push({ object, id });
+    }
+
+    _disconnectAll() {
+        for (const { object, id } of this._connectionIds) {
+            object.disconnect(id);
+        }
+        this._connectionIds = [];
+    }
+
+    destroy() {
+        this._disconnectAll();
     }
 
     _buildUI() {
@@ -71,7 +88,7 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
             placeholder_text: _('Type to filter...'),
             valign: Gtk.Align.CENTER,
         });
-        searchEntry.connect('search-changed', () => {
+        this._connectAndStore(searchEntry, 'search-changed', () => {
             this._filterApps(searchEntry.get_text().toLowerCase());
         });
         searchRow.add_suffix(searchEntry);
@@ -81,7 +98,7 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
         this._loadInstalledApps(hiddenApps);
 
         // Listen for settings changes
-        this._settings.connect('changed::hidden-apps', () => {
+        this._connectAndStore(this._settings, 'changed::hidden-apps', () => {
             this._updateHiddenAppsList();
         });
     }
@@ -120,6 +137,9 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
             checkbox.set_active(hiddenApps.includes(appId));
 
             checkbox.connect('toggled', () => {
+                this._onAppToggled(appId, checkbox.get_active());
+            });
+            this._connectAndStore(checkbox, 'toggled', () => {
                 this._onAppToggled(appId, checkbox.get_active());
             });
 
@@ -194,7 +214,7 @@ class AltTabHidePrefsWidget extends Adw.PreferencesGroup {
                 valign: Gtk.Align.CENTER,
                 css_classes: ['flat', 'error'],
             });
-            removeButton.connect('clicked', () => {
+            this._connectAndStore(removeButton, 'clicked', () => {
                 this._removeHiddenApp(appId);
             });
 

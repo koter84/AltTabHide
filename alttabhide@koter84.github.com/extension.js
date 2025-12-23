@@ -48,8 +48,8 @@ export default class AltTabHideExtension extends Extension {
             this._injectionManager = null;
         }
 
+        // Unset settings
         if (this._settings) {
-            this._settings.run_dispose();
             this._settings = null;
         }
     }
