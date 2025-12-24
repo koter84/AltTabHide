@@ -34,6 +34,7 @@ jobs:
           FILE="${{ steps.extdir.outputs.dir }}/metadata.json"
           PREV=$(git show HEAD~1:"$FILE" 2>/dev/null | jq -r '.version' || echo "")
           echo "version=$PREV" >> $GITHUB_OUTPUT
+          echo "Previous version: $PREV"
 
       - name: Read current version
         id: curr
@@ -41,13 +42,17 @@ jobs:
           FILE="${{ steps.extdir.outputs.dir }}/metadata.json"
           CURR=$(jq -r '.version' "$FILE")
           echo "version=$CURR" >> $GITHUB_OUTPUT
+          echo "Current version: $CURR"
+
+      - name: Show versions
+        run: |
+          echo "Previous version: ${{ steps.prev.outputs.version }}"
+          echo "Current version: ${{ steps.curr.outputs.version }}"
 
       - name: Stop if version unchanged
-        if: steps.prev.outputs.version == steps.curr.outputs.version
+        if: ${{ steps.prev.outputs.version == steps.curr.outputs.version }}
         run: |
-          echo "Version unchanged (${{
-            steps.curr.outputs.version
-          }}), skipping release"
+          echo "Version unchanged (${{ steps.curr.outputs.version}}), skipping release"
           exit 0
 
       - name: Build extension zip
