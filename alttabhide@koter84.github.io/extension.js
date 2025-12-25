@@ -1,14 +1,7 @@
 /**
- * Alt-Tab Hide Extension for GNOME Shell 49
+ * Alt-Tab Hide Extension for GNOME Shell
  *
  * This extension allows users to hide specific applications from the Alt-Tab window switcher.
- * It uses InjectionManager to override the default alt-tab behavior.
- *
- * GNOME 49 Alt-Tab architecture:
- * - AppSwitcherPopup: Main Alt+Tab (switch-applications) - shows apps with their windows
- * - WindowSwitcherPopup: Alt+Tab (switch-windows) - shows individual windows
- * - WindowCyclerPopup: Cycle windows mode
- * - GroupCyclerPopup: Cycle within app group
  */
 
 import Shell from 'gi://Shell';
@@ -24,7 +17,6 @@ export default class AltTabHideExtension extends Extension {
         super(metadata);
         this._settings = null;
         this._injectionManager = null;
-        this._settingsChangedId = null;
     }
 
     enable() {
@@ -36,13 +28,7 @@ export default class AltTabHideExtension extends Extension {
     }
 
     disable() {
-        // Disconnect settings signal
-        if (this._settings && this._settingsChangedId) {
-            this._settings.disconnect(this._settingsChangedId);
-            this._settingsChangedId = null;
-        }
-
-        // Clear all injections
+		// Clear all injections
         if (this._injectionManager) {
             this._injectionManager.clear();
             this._injectionManager = null;
