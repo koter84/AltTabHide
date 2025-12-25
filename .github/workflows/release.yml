@@ -19,11 +19,13 @@ jobs:
           fetch-depth: 0
 
       - name: Validate tag format
+        id: tag
         run: |
           if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+$ ]]; then
             echo "Invalid tag format: $GITHUB_REF_NAME. Expected format: v[integer]."
             exit 1
           fi
+          echo "tag=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
 
       - name: Locate extension directory
         id: extdir
@@ -61,6 +63,6 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.curr.outputs.version }}
-          name: v${{ steps.curr.outputs.version }}
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
           files: "*.zip"
