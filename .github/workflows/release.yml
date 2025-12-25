@@ -2,8 +2,8 @@ name: Release GNOME Extension
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*"  # Matches tags like v1, v2, v3, etc.
 
 permissions:
   contents: write
@@ -18,6 +18,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate tag format
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+$ ]]; then
+            echo "Invalid tag format: $GITHUB_REF_NAME. Expected format: v[integer]."
+            exit 1
+          fi
+
       - name: Locate extension directory
         id: extdir
         run: |
@@ -28,43 +35,28 @@ jobs:
           fi
           echo "dir=$DIR" >> $GITHUB_OUTPUT
 
-      - name: Read previous version
-        id: prev
-        run: |
-          FILE="${{ steps.extdir.outputs.dir }}/metadata.json"
-          PREV=$(git show HEAD~1:"$FILE" 2>/dev/null | jq -r '.version' || echo "")
-          echo "version=$PREV" >> $GITHUB_OUTPUT
-          echo "Previous version: $PREV"
-
-      - name: Read current version
-        id: curr
-        run: |
-          FILE="${{ steps.extdir.outputs.dir }}/metadata.json"
-          CURR=$(jq -r '.version' "$FILE")
-          echo "version=$CURR" >> $GITHUB_OUTPUT
-          echo "Current version: $CURR"
-
-      - name: Show versions
-        run: |
-          echo "Previous version: ${{ steps.prev.outputs.version }}"
-          echo "Current version: ${{ steps.curr.outputs.version }}"
-
-      - name: Stop if version unchanged
-        if: ${{ steps.prev.outputs.version == steps.curr.outputs.version }}
-        run: |
-          echo "Version unchanged (${{ steps.curr.outputs.version}}), skipping release"
-          exit 0
-
       - name: Build extension zip
         run: |
           DIR="${{ steps.extdir.outputs.dir }}"
           UUID=$(jq -r '.uuid' "$DIR/metadata.json")
-          VERSION=$(jq -r '.version' "$DIR/metadata.json")
+          VERSION="${GITHUB_REF_NAME}"
           cd "$DIR"
-          zip -r "../${UUID}_v${VERSION}.zip" . \
+          zip -r "../${UUID}_${VERSION}.zip" . \
             -x "*.git*" \
             -x "*.github*" \
             -x "*.zip"
+
+      - name: Check if release file exists
+        id: checkfile
+        run: |
+          DIR="${{ steps.extdir.outputs.dir }}"
+          UUID=$(jq -r '.uuid' "$DIR/metadata.json")
+          VERSION="${GITHUB_REF_NAME}"
+          FILE="../${UUID}_${VERSION}.zip"
+          if [ -f "$FILE" ]; then
+            echo "Release file $FILE already exists. Skipping release."
+            exit 0
+          fi
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
